@@ -1,0 +1,5 @@
+body { font-family: Arial, sans-serif; width: 360px; padding: 12px; }
+#selectedText { width: 100%; box-sizing: border-box; }
+.buttons { margin-top: 8px; display:flex; gap:8px; }
+button { padding: 8px 10px; cursor:pointer; }
+#result { margin-top: 12px; white-space: pre-wrap; }
