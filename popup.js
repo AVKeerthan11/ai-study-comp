@@ -377,3 +377,178 @@ document.addEventListener("DOMContentLoaded", loadSelection);
 
 // Refresh selection when popup is focused
 document.addEventListener("focus", loadSelection);
+// Add these variables at the top
+const studySessionBtn = document.getElementById("studySessionBtn");
+const studyModal = document.getElementById("studyModal");
+const studyQuestion = document.getElementById("studyQuestion");
+const studyOptions = document.getElementById("studyOptions");
+const studyFeedback = document.getElementById("studyFeedback");
+const nextQuestionBtn = document.getElementById("nextQuestion");
+const endSessionBtn = document.getElementById("endSession");
+const progressFill = document.getElementById("progressFill");
+const progressText = document.querySelector(".progress-text");
+
+let currentSession = null;
+let currentQuestionIndex = 0;
+let userScore = 0;
+
+// Study Session Event Listener
+studySessionBtn.addEventListener("click", async () => {
+  const text = selectedTextEl.value.trim();
+  if (!text) {
+    resultEl.textContent = "Please select text first to start a study session.";
+    resultEl.className = "error";
+    return;
+  }
+  
+  if (text.length < 200) {
+    resultEl.textContent = "Please select more text for a comprehensive study session.";
+    resultEl.className = "warning";
+    return;
+  }
+  
+  await startStudySession(text);
+});
+
+// Start Study Session
+async function startStudySession(text) {
+  try {
+    resultEl.textContent = "Creating your study session...";
+    resultEl.className = "processing";
+    
+    const response = await new Promise((resolve) => {
+      chrome.runtime.sendMessage({ 
+        action: "studySession", 
+        text: text 
+      }, resolve);
+    });
+    
+    if (response.success) {
+      currentSession = response.questions;
+      currentQuestionIndex = 0;
+      userScore = 0;
+      showStudyModal();
+      displayQuestion(0);
+    } else {
+      resultEl.textContent = response.error || "Failed to create study session.";
+      resultEl.className = "error";
+    }
+  } catch (error) {
+    console.error("Study session error:", error);
+    resultEl.textContent = "Error creating study session.";
+    resultEl.className = "error";
+  }
+}
+
+// Show Study Modal
+function showStudyModal() {
+  studyModal.style.display = "block";
+  resultEl.textContent = "Study session started!";
+  resultEl.className = "success";
+}
+
+// Display Question
+function displayQuestion(index) {
+  if (!currentSession || index >= currentSession.length) {
+    endStudySession();
+    return;
+  }
+  
+  const question = currentSession[index];
+  studyQuestion.textContent = question.question;
+  
+  // Update progress
+  const progress = ((index + 1) / currentSession.length) * 100;
+  progressFill.style.width = `${progress}%`;
+  progressText.textContent = `Question ${index + 1} of ${currentSession.length}`;
+  
+  // Display options
+  studyOptions.innerHTML = question.options.map((opt, optIndex) => {
+    const optionMatch = opt.match(/^([A-D])[\.\)]/i);
+    const optionKey = optionMatch ? optionMatch[1].toUpperCase() : String.fromCharCode(65 + optIndex);
+    
+    return `
+      <div class="study-option" data-option="${optionKey}">
+        ${opt}
+      </div>
+    `;
+  }).join('');
+  
+  // Reset state
+  studyFeedback.innerHTML = '';
+  studyFeedback.className = '';
+  nextQuestionBtn.style.display = 'none';
+  
+  // Add option click listeners
+  studyOptions.querySelectorAll('.study-option').forEach(option => {
+    option.addEventListener('click', function() {
+      if (studyFeedback.innerHTML) return; // Already answered
+      
+      const selectedOption = this.dataset.option;
+      const correctAnswer = question.correctAnswer;
+      const isCorrect = selectedOption === correctAnswer;
+      
+      // Mark selected option
+      this.classList.add('selected');
+      
+      // Show correct answer on all options
+      studyOptions.querySelectorAll('.study-option').forEach(opt => {
+        if (opt.dataset.option === correctAnswer) {
+          opt.classList.add('correct');
+        }
+        if (opt.dataset.option === selectedOption && !isCorrect) {
+          opt.classList.add('incorrect');
+        }
+      });
+      
+      // Update score
+      if (isCorrect) userScore++;
+      
+      // Show feedback
+      studyFeedback.textContent = isCorrect 
+        ? '✅ Correct! Well done!' 
+        : `❌ Incorrect. The correct answer is ${correctAnswer}`;
+      studyFeedback.className = isCorrect ? 'study-feedback correct' : 'study-feedback incorrect';
+      
+      nextQuestionBtn.style.display = 'block';
+    });
+  });
+}
+
+// Next Question
+nextQuestionBtn.addEventListener('click', () => {
+  currentQuestionIndex++;
+  displayQuestion(currentQuestionIndex);
+});
+
+// End Session
+endSessionBtn.addEventListener('click', endStudySession);
+
+// End Study Session
+function endStudySession() {
+  studyModal.style.display = 'none';
+  
+  if (currentSession) {
+    const scorePercent = Math.round((userScore / currentSession.length) * 100);
+    resultEl.innerHTML = `
+      <div class="study-results">
+        <h4>🎯 Study Session Complete!</h4>
+        <div class="score-circle">${scorePercent}%</div>
+        <p>You scored ${userScore} out of ${currentSession.length}</p>
+        <p>${scorePercent === 100 ? '🎉 Perfect score! Amazing!' : 
+             scorePercent >= 70 ? '👍 Great job! Keep learning!' : 
+             '💪 Good effort! Practice makes perfect!'}</p>
+      </div>
+    `;
+    resultEl.className = 'success';
+  }
+  
+  currentSession = null;
+}
+
+// Close modal when clicking outside
+studyModal.addEventListener('click', (e) => {
+  if (e.target === studyModal) {
+    endStudySession();
+  }
+});

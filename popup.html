@@ -11,13 +11,33 @@
       <textarea id="selectedText" placeholder="Select text on the page and open extension..." rows="4"></textarea>
 
       <div class="buttons">
+
         <button id="summarizeBtn">Summarize</button>
         <button id="explainBtn">Explain</button>
         <button id="quizBtn">Quiz Me</button>
+        <button id="studySessionBtn">Start Study Session</button>
       </div>
 
       <div id="result"></div>
     </div>
+    <div id="studyModal" class="modal">
+  <div class="modal-content">
+    <h4>🧠 Study Session</h4>
+    <div id="studyProgress">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-text">Question 1 of 5</div>
+    </div>
+    <div id="studyQuestion" class="study-question"></div>
+    <div id="studyOptions" class="study-options"></div>
+    <div id="studyFeedback" class="study-feedback"></div>
+    <div class="study-actions">
+      <button id="nextQuestion" class="study-button">Next Question</button>
+      <button id="endSession" class="study-button secondary">End Session</button>
+    </div>
+  </div>
+</div>
 
     <script src="popup.js"></script>
   </body>
