@@ -1,7 +1,7 @@
 // background.js
 
-const GEMINI_API_KEY = "AIzaSyB92lVdoX1DusBrv7FgCGhI7M5VcQCbAaM";
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+const GEMINI_API_KEY = "your_gemini_api_key_here"; // Replace with your actual Gemini API key
+const GEMINI_API_URL = "url";
 // Call Gemini API with timeout
 async function callGeminiAPI(prompt) {
   return new Promise(async (resolve, reject) => {
