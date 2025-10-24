@@ -20,4 +20,4 @@ A privacy-focused Chrome extension that helps students and researchers summarize
 Google Chrome Built-in AI Challenge 2025
 
 ## 📹 Demo Video
-[Link to your 3-minute demo video]
+https://youtu.be/CqdvNi0sD5Y
